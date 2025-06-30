@@ -28,3 +28,18 @@ The uart_tx is implemented by FSM having 4 stages
 4) STOP_bit stage: sends the stop bit by making the line HIGH and goes to stage 0
 
 uart_rx works the same way but it samples the data at the middle of the bit as shown in code
+The receiver continuously monitors the i_rx_serial wire. Remember, this wire is normally HIGH (idle state). The very first thing we need to do is detect when the line goes from HIGH to LOW. This is our signal that a Start Bit has begun.
+Once we detect this falling edge, we know a frame is likely starting.
+New Challenge #2: The Sampling Problem
+Okay, so we've detected a Start Bit. We know that 8 data bits will follow. But when exactly should we read the voltage on the wire to see if it's a '1' or a '0'?
+ * If we read it right at the beginning of the bit time, a small bit of noise or a slow-changing signal might give us the wrong value.
+ * If we read it at the very end, we might be too late and already be seeing the next bit.
+The Solution: Sample in the Middle!
+The safest place to check the value of a bit is right in its center. This gives us the best chance of reading the correct, stable value.
+Here's our plan:
+ * Detect the Start Bit: When the line goes from HIGH to LOW, we start a timer.
+ * Wait Half a Bit: We wait for half of a bit-time. We do this to get to the middle of the Start Bit. We check the line again. Is it still LOW? If yes, great! This confirms it was a real Start Bit and not just a random glitch.
+ * Wait a Full Bit: From that middle point, we now wait one full bit-time. This will land us perfectly in the middle of the first data bit (D0). We read the value and store it.
+ * Repeat: We wait another full bit-time. This lands us in the middle of the next data bit (D1). We read it. We repeat this for all 8 data bits.
+ * Check the Stop Bit: After reading the 8th data bit, we wait one more full bit-time. This should land us in the middle of the Stop Bit. We check to make sure the line is HIGH. If it is, we know the frame was received correctly.
+ * Done! We can now present the 8 data bits we collected and signal that we are finished.
