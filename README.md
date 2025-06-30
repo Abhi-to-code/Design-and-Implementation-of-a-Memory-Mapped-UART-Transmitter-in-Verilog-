@@ -1,4 +1,4 @@
-# Design-and-Implementation-of-a-Memory-Mapped-UART-Transmitter-in-Verilog-
+# Design and Implementation of a Memory Mapped UART Transmitter in Verilog 
 
 ## Intruction
 I have made the implementation of UART protocol by using the uart transmitter and receiver.
