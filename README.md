@@ -43,3 +43,6 @@ Here's our plan:
  * Repeat: We wait another full bit-time. This lands us in the middle of the next data bit (D1). We read it. We repeat this for all 8 data bits.
  * Check the Stop Bit: After reading the 8th data bit, we wait one more full bit-time. This should land us in the middle of the Stop Bit. We check to make sure the line is HIGH. If it is, we know the frame was received correctly.
  * Done! We can now present the 8 data bits we collected and signal that we are finished.
+
+Now the updated code has hamming(13,8) encoding for the error correction
+
