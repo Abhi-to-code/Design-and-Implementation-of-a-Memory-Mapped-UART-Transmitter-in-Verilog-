@@ -20,20 +20,32 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module uart_rx (
+module uart_rx #(
+    parameter divisor = 10
+)(
     input clk,
     input rst,
     input frame,
 
     output reg [7:0] data,
-    output reg ready
+    output reg ready,
+    output reg error_detected,
+    output reg error_corrected,
+    output reg overall_parity_error
 );
 
 reg [1:0] state;
 reg [10:0] clk_counter;
 reg [3:0] bit_counter;
-reg [7:0] data_register;
-
+reg [12:0] data_register;
+wire [7:0] data_decoded;
+wire error_wire;
+wire wire_error_detected;
+wire wire_error_corrected;
+wire wire_overall_parity_error;
+reg [12:0] reg_for_testing;
+//parity_checker #(8) parity_check_rx(data_register, error_wire);
+hamming_decoder decoder(data_register, data_decoded, wire_error_detected, wire_error_corrected,wire_overall_parity_error);
 
 always @(posedge clk) begin
     if (rst) begin
@@ -42,6 +54,9 @@ always @(posedge clk) begin
         bit_counter <= 0;
         data_register <= 0;
         ready <= 0;
+        error_detected <= 0;
+        error_corrected <= 0;
+        overall_parity_error <= 0;
     end
     else begin
         case (state)
@@ -54,7 +69,7 @@ always @(posedge clk) begin
             end
             
             2'b01: begin
-                if (clk_counter < (5/2)-1) begin
+                if (clk_counter < (divisor/2)-1) begin
                     clk_counter <= clk_counter + 1; // waiting for the half bit time
                 end
                 else begin
@@ -70,14 +85,14 @@ always @(posedge clk) begin
             end
 
             2'b10: begin
-                if (clk_counter < 4) begin
+                if (clk_counter < divisor -1) begin
                     // waiting for full bit here
                     clk_counter <= clk_counter + 1;
                 end
                 else begin
                     clk_counter <= 0;
                     data_register[bit_counter] <= frame;
-                    if (bit_counter < 7) begin
+                    if (bit_counter < 12) begin
                         bit_counter <= bit_counter + 1;
                     end 
                     else begin
@@ -88,11 +103,15 @@ always @(posedge clk) begin
             
             2'b11: begin
                 // Stoping phase
-                if (clk_counter < 4) begin
+                if (clk_counter < divisor - 1) begin
                     clk_counter <= clk_counter + 1;
                 end
                 else begin
-                    data <= data_register;
+                    data <= data_decoded;
+                    reg_for_testing <= data_register;
+                    error_corrected <= wire_error_corrected;
+                    error_detected <= wire_error_detected;
+                    overall_parity_error <= wire_overall_parity_error;
                     ready <= 1;
                     state <= 2'b00;
                 end
