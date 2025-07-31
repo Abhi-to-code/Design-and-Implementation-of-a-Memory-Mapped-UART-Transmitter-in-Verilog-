@@ -3,7 +3,7 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 30.06.2025 00:03:06
+// Create Date: 07/07/2025 12:20:30 AM
 // Design Name: 
 // Module Name: test
 // Project Name: 
@@ -20,18 +20,22 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
+
 module test();
 
 reg clk;
 reg rst;
 wire [7:0] data_from_memory;
-wire [7:0] data_sent;
+wire [12:0] data_sent;
 wire line;
 wire baud_tick;
-wire [7:0] data_recorded;
+wire [12:0] data_recorded;
 wire [7:0] data_saved_to_memory;
+wire error_detected;
+wire error_corrected;
+wire overall_parity_error;
 
-uart_protocol uut(clk, rst, data_from_memory, data_sent, line, baud_tick, data_recorded, data_saved_to_memory);
+uart_protocol uut(clk, rst, data_from_memory, data_sent, line, baud_tick, data_recorded, data_saved_to_memory, error_detected, error_corrected, overall_parity_error);
 
 initial begin
     rst = 1;
@@ -43,7 +47,7 @@ always #10 clk = ~clk;
 
 initial begin
     clk = 0;
-    #10000;
+    #25000;
     $finish;
 end
 endmodule
