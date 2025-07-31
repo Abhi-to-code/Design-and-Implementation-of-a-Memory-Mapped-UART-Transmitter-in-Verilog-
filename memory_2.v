@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
+
 module memory_2 (
     input clk,
     input rst,
@@ -30,19 +31,22 @@ module memory_2 (
 
 reg [4:0] address_counter;
 reg [7:0] register [0:31];
+reg ready_prev;
 
 always @(posedge clk) begin
     if (rst) begin
         address_counter <= 0;
+        ready_prev <= 0;
     end
     else begin
-        if (ready) begin
+        ready_prev <= ready;
+        if (ready && !ready_prev) begin
             if (address_counter < 32) begin
                 register[address_counter] <= data;
                 address_counter <= address_counter + 1;
                 test <= data;
             end
-            else address_counter <= address_counter + 1;
+//            else address_counter <= address_counter + 1;
         end
     end
 end
