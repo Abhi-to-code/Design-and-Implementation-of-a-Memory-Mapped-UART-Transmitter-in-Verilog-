@@ -23,6 +23,13 @@ initial begin
     register[28] = 8'h41; register[29] = 8'hFE; register[30] = 8'h8B; register[31] = 8'h30;
 end
 
+//always @(*) begin
+//    if (rst) begin
+//        data <= 8'b00;
+//    end
+//    else data <= register[address_counter];
+//end
+
 
 always @(posedge clk) begin
     if (rst) begin
