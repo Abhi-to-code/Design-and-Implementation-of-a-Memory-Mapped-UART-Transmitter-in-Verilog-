@@ -19,7 +19,9 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module uart_tx (
+module uart_tx #(
+    parameter divisor = 10
+)(
     input clk,
     input [7:0] data,
     input rst,
@@ -32,13 +34,18 @@ reg [10:0] clk_counter;
 reg [3:0] bit_counter;
 reg baud_tick;
 reg [1:0] state;
-reg [7:0] data_register;
+reg [12:0] data_register;
+wire [12:0] encoded_message;
+
+//even_parity_bit_generator #(8) parity_gen_tx(data, data_parity);
+
+hamming_encoder encoder(data, encoded_message); //13 bits
 
 initial baud_tick <= 0;
 initial frame <= 1;
 
 always @(posedge clk) begin
-    if (clk_counter < 4) begin
+    if (clk_counter < divisor -1) begin
         clk_counter <= clk_counter + 1;
         baud_tick <= 0;
     end
@@ -65,7 +72,7 @@ always @(posedge clk) begin
             case (state)
                 2'b00: begin
                     // the idle state
-                    data_register <= data;
+                    data_register <= encoded_message;
                     ready <= 1;
                     state <= 2'b01;
                 end
@@ -80,7 +87,7 @@ always @(posedge clk) begin
                 
                 2'b10: begin
                     frame <= data_register[bit_counter];
-                    if(bit_counter < 7) begin
+                    if(bit_counter < 12) begin
                         bit_counter <= bit_counter + 1;
                         state <= 2'b10;
                     end
